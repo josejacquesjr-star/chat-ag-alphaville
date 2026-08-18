@@ -78,6 +78,14 @@ DIRETRIZES DE COMPORTAMENTO:
 - Nunca invente regras, valores ou dados que não estejam neste contexto.
 """
 
+# Tenta obter a chave de API diretamente dos segredos do Streamlit Cloud (Secrets)
+api_key_from_secrets = None
+try:
+    if "GEMINI_API_KEY" in st.secrets:
+        api_key_from_secrets = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    pass
+
 # Interface Visual do Aplicativo
 st.title("🤖 Assistente Virtual — AG Alphaville")
 st.subheader("Plataforma Inteligente de Apoio à Governança e Atendimento ao Morador")
@@ -90,8 +98,18 @@ with st.sidebar:
     st.write("Esta aplicação foi desenhada para materializar o atendimento virtual inteligente para a Diretoria Executiva de forma rápida, local e 100% segura.")
     
     st.markdown("---")
-    # Entrada de Chave de API de forma segura
-    api_key_input = st.text_input("Insira sua Gemini API Key:", type="password", help="Sua chave fica salva apenas localmente na memória do seu navegador durante esta sessão.")
+    
+    # Gerenciamento dinâmico da Chave de API
+    if api_key_from_secrets:
+        api_key_input = api_key_from_secrets
+        st.success("🔒 **Chave de API ativa e segura!** (Integrada na nuvem)")
+    else:
+        # Fallback caso não esteja rodando na nuvem com segredos configurados
+        api_key_input = st.text_input(
+            "Insira sua Gemini API Key:", 
+            type="password", 
+            help="Sua chave fica salva apenas localmente na memória do seu navegador durante esta sessão."
+        )
     
     # Seleção de Modelo para evitar erros 404 de compatibilidade
     model_options = [
