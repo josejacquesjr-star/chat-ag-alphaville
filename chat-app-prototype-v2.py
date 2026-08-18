@@ -95,10 +95,10 @@ with st.sidebar:
     
     # Seleção de Modelo para evitar erros 404 de compatibilidade
     model_options = [
-        "gemini-1.5-flash",
         "gemini-1.5-pro",
-        "gemini-2.5-flash",
-        "gemini-1.0-pro"
+        "gemini-1.5-flash",
+        "gemini-3.6-flash",
+        "gemini-2.5-pro"
     ]
     selected_model_name = st.selectbox(
         "Selecione o Modelo Gemini:",
@@ -106,6 +106,17 @@ with st.sidebar:
         index=0,
         help="Caso o modelo padrão dê erro, mude para outro compatível com sua chave."
     )
+    
+    # Campo para modelo personalizado (Garante compatibilidade total em 2026 com novos modelos)
+    custom_model_input = st.text_input(
+        "Ou digite um modelo customizado (opcional):",
+        value="",
+        placeholder="Ex: gemini-3.6-flash",
+        help="Se a API sugerir um modelo específico, digite o nome dele aqui."
+    )
+    
+    # Define o modelo final a ser usado
+    final_model = custom_model_input.strip() if custom_model_input.strip() else selected_model_name
     
     st.markdown("---")
     st.markdown("### 📌 Sugestões de Perguntas para Testar:")
@@ -154,9 +165,8 @@ if user_query:
                 genai.configure(api_key=api_key_input)
                 
                 # Configura o modelo selecionado pelo usuário
-                # Passando system_instruction diretamente na inicialização
                 model = genai.GenerativeModel(
-                    model_name=selected_model_name,
+                    model_name=final_model,
                     system_instruction=CONTEXTO_ALPHAVILLE
                 )
                 
@@ -173,13 +183,14 @@ if user_query:
                 # Diagnóstico inteligente de erros de modelo ou de chave
                 diagnostic_info = ""
                 
-                if "404" in error_str or "not found" in error_str.lower():
+                if "404" in error_str or "not found" in error_str.lower() or "no longer available" in error_str.lower():
                     diagnostic_info = (
                         "\n\n**🔍 DIAGNÓSTICO DE COMPATIBILIDADE:**\n"
-                        f"O modelo `{selected_model_name}` parece não estar ativo ou não é suportado pelo seu tipo de chave de API.\n"
+                        f"O modelo `{final_model}` parece não estar ativo, foi depreciado ou não é suportado pelo seu tipo de chave de API.\n"
                         "**Como resolver no aplicativo:**\n"
-                        "1. Na barra lateral esquerda, tente mudar o campo **'Selecione o Modelo Gemini'** para outro modelo (como `gemini-1.5-pro` ou `gemini-1.0-pro`).\n"
-                        "2. Se você acabou de criar a chave no Google AI Studio, ela pode levar de 1 a 3 minutos para se propagar totalmente pelos servidores do Google."
+                        "1. Na barra lateral esquerda, selecione o modelo **`gemini-1.5-pro`** (que possui alta estabilidade).\n"
+                        "2. Se a mensagem de erro sugerir um modelo mais novo (como o `gemini-3.6-flash`), digite-o no campo **'Ou digite um modelo customizado'** na barra lateral.\n"
+                        "3. Se você acabou de criar a chave no Google AI Studio, ela pode levar de 1 a 3 minutos para se propagar totalmente pelos servidores do Google."
                     )
                     
                     # Tentar listar os modelos disponíveis reais da chave para ajudar o usuário
